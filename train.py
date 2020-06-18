@@ -137,7 +137,7 @@ def main():
                        epoch, i_iter, int(dataset_length.data), flux_loss, skl_loss))
                 
             if global_step % 500 == 0:
-                vis_flux(vis_image, pred_flux, gt_flux, dilmask, image_name, args.train_debug_vis_dir + args.dataset + '/')
+                vis_flux(vis_image, pred_flux, gt_flux, pred_skl, str(global_step) + '_' + image_name[0], args.train_debug_vis_dir + args.dataset + '/')
 
             if global_step % 1e4 == 0:
                 torch.save(model.state_dict(), args.snapshot_dir + args.dataset + '_' + str(global_step) + '.pth')

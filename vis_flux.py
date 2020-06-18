@@ -8,6 +8,7 @@ matplotlib.use('agg')
 import pylab as plt
 from matplotlib import cm
 import os
+import torch.nn.functional as F
 
 def label2color(label):
 
@@ -38,15 +39,18 @@ def vis_flux(vis_image, pred_flux, gt_flux, gt_mask, image_name, save_dir):
     vis_image = vis_image.data.cpu().numpy()[0, ...]
     pred_flux = pred_flux.data.cpu().numpy()[0, ...]
     gt_flux = gt_flux.data.cpu().numpy()[0, ...]
-    gt_mask = gt_mask.data.cpu().numpy()[0, 0, ...]
+    gt_mask = gt_mask.detach()
+    gt_mask = 255*F.sigmoid(gt_mask)
+
+    gt_mask = gt_mask.cpu().numpy()[0, 0, ...]
     
-    image_name = image_name[0]
+    image_name = image_name
 
     norm_pred = np.sqrt(pred_flux[1,:,:]**2 + pred_flux[0,:,:]**2)
     angle_pred = 180/math.pi*np.arctan2(pred_flux[1,:,:], pred_flux[0,:,:])
 
     norm_gt = np.sqrt(gt_flux[1,:,:]**2 + gt_flux[0,:,:]**2)
-    angle_gt = 180/math.pi*np.arctan2(gt_flux[1,:,:], gt_flux[0,:,:])
+    angle_gt = 180/math.pi*np.arctan2(gt_flux[1,:,:], gt_flux[0,:,:]) * (norm_gt)
 
     fig = plt.figure(figsize=(10,6))
 
@@ -66,8 +70,7 @@ def vis_flux(vis_image, pred_flux, gt_flux, gt_mask, image_name, save_dir):
     plt.colorbar(im2, shrink=0.5)
 
     ax5 = fig.add_subplot(234)
-    color_mask = label2color(gt_mask)
-    ax5.imshow(color_mask)
+    ax5.imshow(gt_mask, cmap=cm.gray)
 
     ax4 = fig.add_subplot(235)
     ax4.set_title('Norm_pred')
