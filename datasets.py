@@ -36,8 +36,10 @@ class FluxSkeletonDataset(Dataset):
         image_path, label_path = self.image_names[index].split()
         image_name = image_path.split('/')[-1]
 
-        image = cv2.imread(self.data_root_dir + image_path, 1)
+        image = cv2.imread(self.data_root_dir + image_path, 1)[]
         vis_image = image.copy()
+
+        image = image[:,:, ::-1]
 
         image = image.astype(np.float32)
         # normalize input image
