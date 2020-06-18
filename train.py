@@ -54,10 +54,9 @@ def loss_calc(pred_flux, gt_flux, pred_skl, gt_skl, dilmask):
 
     skl_weight_matrix = (skl_pos_matrix + skl_neg_matrix).cuda(device_id)
 
-    gt_skl = gt_skl.long().cuda(device_id)
+    skl_criterion = nn.BCEWithLogitsLoss(reduction='none').cuda(device_id)
 
-    skl_criterion = nn.CrossEntropyLoss(reduction='none')
-
+    gt_skl = gt_skl.cuda(device_id)
     skl_loss = skl_weight_matrix * skl_criterion(pred_skl, gt_skl)
     skl_loss = skl_loss.sum()
 
@@ -135,7 +134,7 @@ def main():
 
             if global_step % 100 == 0:
                 print('epoche {} i_iter/total {}/{} flux_loss {:.2f} skl_loss {:.2f}'.format(\
-                       epoch, i_iter, int(dataset_lendth.data), flux_loss, skl_loss))
+                       epoch, i_iter, int(dataset_length.data), flux_loss, skl_loss))
                 
             if global_step % 500 == 0:
                 vis_flux(vis_image, pred_flux, gt_flux, dilmask, image_name, args.train_debug_vis_dir + args.dataset + '/')

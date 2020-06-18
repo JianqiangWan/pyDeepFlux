@@ -84,4 +84,7 @@ class FluxSkeletonDataset(Dataset):
         dilmask = (dilmask>0).astype(np.float32)
         dilmask = dilmask[np.newaxis, ...]
 
+        skeleton = (skeleton > 0).astype(np.float32)
+        skeleton = skeleton[np.newaxis]
+
         return image, vis_image, skeleton, dilmask, flux, self.dataset_length, image_name

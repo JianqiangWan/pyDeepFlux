@@ -38,7 +38,7 @@ def vis_flux(vis_image, pred_flux, gt_flux, gt_mask, image_name, save_dir):
     vis_image = vis_image.data.cpu().numpy()[0, ...]
     pred_flux = pred_flux.data.cpu().numpy()[0, ...]
     gt_flux = gt_flux.data.cpu().numpy()[0, ...]
-    gt_mask = gt_mask.data.cpu().numpy()[0, ...]
+    gt_mask = gt_mask.data.cpu().numpy()[0, 0, ...]
     
     image_name = image_name[0]
 
