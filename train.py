@@ -6,6 +6,9 @@ from model.fluxnet import FluxNet
 from vis_flux import vis_flux
 from datasets import FluxSkeletonDataset
 from torch.utils.data import Dataset, DataLoader
+# from tensorboardX import SummaryWriter
+
+# writer = SummaryWriter('logs/')
 
 INI_LEARNING_RATE = 1e-5
 WEIGHT_DECAY = 5e-4
@@ -64,6 +67,21 @@ def loss_calc(pred_flux, gt_flux, pred_skl, gt_skl, dilmask):
 
 def get_params(model, key, bias=False):
 
+    # for backbone 
+    if key == "backbone":
+        for m in model.named_modules():
+            if "layer" in m[0]:
+                if isinstance(m[1], nn.Conv2d):
+                    if not bias:
+                        yield m[1].weight
+                    else:
+                        if m[1].bias != None:
+                            yield m[1].bias
+                # freeze bn
+                elif isinstance(m[1], nn.BatchNorm2d):
+                    m[1].weight.requires_grad = False
+                    m[1].bias.requires_grad = False
+            
     # for added layer
     if key == "added":
         for m in model.named_modules():
@@ -73,6 +91,9 @@ def get_params(model, key, bias=False):
                         yield m[1].weight
                     else:
                         yield m[1].bias
+                elif isinstance(m[1], nn.BatchNorm2d):
+                    m[1].weight.requires_grad = False
+                    m[1].bias.requires_grad = False
 
 def adjust_learning_rate(optimizer, step):
     
@@ -88,13 +109,22 @@ def main():
     if not os.path.exists(args.train_debug_vis_dir + args.dataset):
         os.makedirs(args.train_debug_vis_dir + args.dataset)
 
-    model = FluxNet()
+    model = FluxNet(model='resnet101')
 
-    model.train()
+    # freeze bn statics
+    model.eval()
     model.cuda()
     
     optimizer = torch.optim.Adam(
         params=[
+            {
+                "params": get_params(model, key="backbone", bias=False),
+                "lr": INI_LEARNING_RATE
+            },
+            {
+                "params": get_params(model, key="backbone", bias=True),
+                "lr": 2 * INI_LEARNING_RATE
+            },
             {
                 "params": get_params(model, key="added", bias=False),
                 "lr": 10 * INI_LEARNING_RATE  
@@ -131,6 +161,9 @@ def main():
             total_loss.backward()
 
             optimizer.step()
+
+            # writer.add_scalar('loss/flux_loss', flux_loss, global_step)
+            # writer.add_scalar('loss/skl_loss', skl_loss, global_step)
 
             if global_step % 100 == 0:
                 print('epoche {} i_iter/total {}/{} flux_loss {:.2f} skl_loss {:.2f}'.format(\

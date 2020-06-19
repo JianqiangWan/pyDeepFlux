@@ -8,7 +8,7 @@ from .res2net import res2net101_26w_4s
 
 class FluxNet(nn.Module):
 
-    def __init__(self, model='resnet101', pretrained=True):
+    def __init__(self, model='res2net101', pretrained=True):
         super(FluxNet, self).__init__()
 
         assert model in ['resnet101', 'res2net101']

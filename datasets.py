@@ -1,4 +1,5 @@
 import cv2
+import os
 import numpy as np
 import os.path as osp
 import scipy.io as sio
@@ -40,7 +41,6 @@ class FluxSkeletonDataset(Dataset):
         vis_image = image.copy()
 
         image = image[:,:, ::-1]
-
         image = image.astype(np.float32)
         # normalize input image
         image = self.normalize(image)
@@ -90,3 +90,41 @@ class FluxSkeletonDataset(Dataset):
         skeleton = skeleton[np.newaxis]
 
         return image, vis_image, skeleton, dilmask, flux, self.dataset_length, image_name
+
+class FluxSkeletonTestDataset(Dataset):
+
+    def __init__(self, dataset='sklarge'):
+        
+        self.dataset = dataset
+
+        if self.dataset == 'sklarge':
+            self.data_root_dir = 'data/SK-LARGE/images/test/'
+        elif self.dataset == 'sympascal':
+            self.data_root_dir = 'data/SymPASCAL-by-KZ/images/test/'
+
+        self.image_names = os.listdir(self.data_root_dir)
+
+        self.dataset_length = len(self.image_names)
+
+        self.normalize = T.Compose([T.ToTensor(),
+                                    T.Normalize(mean=[0.485, 0.456, 0.406],
+                                                std=[0.229, 0.224, 0.225])])
+    
+    def __len__(self):
+
+        return self.dataset_length
+
+    def __getitem__(self, index):
+
+        image_path = self.data_root_dir +  self.image_names[index]
+        image_name = image_path.split('/')[-1]
+
+        image = cv2.imread(image_path, 1)
+        vis_image = image.copy()
+
+        image = image[:,:, ::-1]
+        image = image.astype(np.float32)
+        # normalize input image
+        image = self.normalize(image)
+
+        return image, vis_image, image_name
